@@ -1,0 +1,62 @@
+.formLayout
+	{
+	
+	padding: 10px;
+	
+	margin: 50px auto 0;
+	}
+
+	.formLayout label, .formLayout input
+	{
+	display: block;
+	float: left;
+	width: 50%;
+	margin-bottom: 5px;
+	color: #1e1e1e;
+	}
+
+	.formLayout label
+	{
+	text-align: right;
+	padding-right: 20px;
+	width: 120px;
+	clear: both;
+	}
+	.captc{
+		
+		float:left;
+	}
+	.formLayout select
+	{
+	display: block;
+	float: left;
+	width: 50%;
+	color: #1e1e1e;
+	margin-bottom: 5px;
+	
+	}
+	#harga{
+		display: block;
+		float: left;
+		width: 50%;
+		margin-bottom: 5px;
+		border: 1px solid #ccc;
+		padding: 10px 0;
+		background: #fff;
+	}
+	br
+	{
+		clear: both;
+	}
+	.err-upload {
+  background: none repeat scroll 0 0 #ff0000;
+  color: #fff;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+#total_harga_tikets{
+	clear: both;
+}
+.refresh{
+	color:#1e1e1e;
+}
