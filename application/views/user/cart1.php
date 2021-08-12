@@ -44,7 +44,7 @@
             <h4 class="last-price">TOTAL</h4>
             <span class="total final">Rp. <?= number_format($total[0]['total_harga'], 0, ',', '.') ?></span>
             <div class="clearfix"></div>
-            <a class="order" href="<?= base_url('user/Home/checkout') ?>">Lanjutkan</a>
+            <a class="order" href="<?= base_url('cart/shipment') ?>">Lanjutkan</a>
         </div>
     </div>
 </div>

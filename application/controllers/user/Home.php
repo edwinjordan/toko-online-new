@@ -26,24 +26,10 @@ class Home extends CI_Controller
 		$this->load->helper(array('form', 'url'));
 		$this->load->model('toko_online_model');
 		$this->load->library('session');
-		//$idk_psn = $this->session->userdata('id_kpesan');
-		//echo 'idk'.$idk_psn;
-	//    if (!empty($idk_psn)) {
-	// 	   $acak = $this->session->userdata('id_kpesan');
-	//    }else{
-	// 	   //$id_kpesan = $this->id_oto('IKP','td_keranjang_belanja','fc_kdkeranjang_belanja');
-	// 	    $id_kpesan = $this->id_oto('IKP','keranjang_belanja','id_keranjang_belanja');
-	
-	// 		$this->session->set_userdata('id_kpesan',$id_kpesan);
-	//    }
 		if ($this->session->userdata('id_kpesan') == null) {
 			$acak = rand(10000, 100000);
 			$this->session->set_userdata('id_kpesan', $acak);
 		}
-		// 			$data = $this->db->query("SHOW VARIABLES WHERE VARIABLE_NAME = 'event_scheduler'")->result_array();
-		// 			if ($data[0]['value'] = 'OFF') {
-		// 				$this->db->query("SET GLOBAL event_scheduler = ON");
-		// 			}
 	}
 
 	public function index()
@@ -59,8 +45,8 @@ class Home extends CI_Controller
 		
 		$idk_psn =  $this->session->userdata('id_kpesan');
 		//echo 'idk'.$idk_psn;
-		//$this->toko_online_model->get_cek_pesan($idk_psn);
-		//print_r($this->db->last_query());
+		// $this->toko_online_model->get_cek_pesan($idk_psn);
+		// print_r($this->db->last_query());
 		echo json_encode($this->toko_online_model->get_cek_pesan($idk_psn));
 	}
 
@@ -94,15 +80,43 @@ class Home extends CI_Controller
 		return $kode_jadi= $kode.'_'.$tgl_angk;
 	}
 
-	public function detail($slug_kategori, $slug_produk)
+	public function detail($slug_kategori=null, $slug_produk=null,$id=NULL)
 	{
 		//$this->cek_session();
+		
 		$get_slug_produk = $this->toko_online_model->get_slug_produk($slug_produk);
 		//print_r($this->db->last_query());
 		$data['title'] = "Situs Jual ".$get_slug_produk->nama_produk." Terlengkap | blonjosam.com";
 
 		$data['detail_produk'] = $this->toko_online_model->get_table_where('produk', array('id_produk' => $get_slug_produk->id_produk));
-		
+		$data['voucher'] = $this->toko_online_model->get_voucher('t_voucher', array('id_produk' => $get_slug_produk->id_produk));
+		//print_r($this->db->last_query());
+		$data['rating'] = $this->toko_online_model->get_rating('review_produk', array('id_produk' => $get_slug_produk->id_produk));
+		//$data['komentar'] = $this->toko_online_model->get_komentar('review_produk', array('id_produk' => $get_slug_produk->id_produk));
+		$jml = $this->toko_online_model->komentar();
+
+		$config['base_url'] = base_url().'Home/detail/'.$slug_kategori.'/'.$slug_produk;
+		$config['total_rows'] = $jml->num_rows();
+		$config['per_page'] = '10';
+		$config['next_page'] = '&laquo;';
+		$config['full_tag_open'] = '<div class="page__pagination">';
+		$config['full_tag_close'] = '</div>';
+		$config['first_link']    = 'First';
+		$config['last_link']    = 'Last';
+		$config['next_link']	= 'Next';
+		$config['prev_link']	= 'Prev';
+		$config['cur_tag_open']  = '<span class="current"></a>';
+		$config['cur_tag_close']  = '</a></span>';
+		$config['prev_page'] = '&raquo;';
+
+		//inisialisasi config
+		$this->pagination->initialize($config);
+
+		//buat pagination
+		$data['halaman'] = $this->pagination->create_links();
+
+		$data['query'] = $this->toko_online_model->ambil_komentar($config['per_page'], $id);
+
 		$data['content'] = 'user/produk_detail1';
 		$this->load->view('user/dashboard1', $data);
 	}
@@ -181,14 +195,20 @@ class Home extends CI_Controller
 	public function keranjang_belanja()
 	{
 
-		$this->cek_session(); 
+	//	$this->cek_session(); 
 		$ip = $this->input->post('ip_number');
 		$id_produk = $this->input->post('id_produk');
 		$harga = $this->input->post('harga');
 		$berat_bersih = $this->input->post('berat_bersih');
 		$berat_kotor = $this->input->post('berat_kotor');
-		$quantity = $this->input->post('quantity');
-		$subtotal = $harga * $quantity;
+		$quantity = $this->input->post('jumlah_beli');
+		if($this->input->post('potongan')==""){
+			$potongan = 0;
+		}else{
+			$potongan = $this->input->post('potongan');
+		}
+		
+		$subtotal = $this->input->post('harga_jumlah');
 		$berat_total = $berat_kotor * $quantity;
 
 		$ambil_data = $this->toko_online_model->get_table_where2('keranjang_belanja', array('id_keranjang_belanja' => $ip, 'id_produk' => $id_produk));
@@ -215,7 +235,8 @@ class Home extends CI_Controller
 				'berat_kotor'			=> $berat_kotor,
 				'jumlah_produk'			=> $quantity,
 				'subtotal_belanja'		=> $subtotal,
-				'berat_total'			=> $berat_total
+				'berat_total'			=> $berat_total,
+				'potongan'				=> $potongan
 			);
 			$insert = $this->toko_online_model->insert_table('keranjang_belanja', $data);
 		}
@@ -261,9 +282,11 @@ class Home extends CI_Controller
 
 	public function cart()
 	{
-		$data['total'] = $this->toko_online_model->get_total('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('acak')), 'jumlah_produk', 'subtotal_belanja');
-		$data['jumlah'] = $this->toko_online_model->get_jumlah('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('acak')), 'jumlah_produk', 'berat_total');
-		$data['cart'] = $this->toko_online_model->get_keranjang_belanja(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('acak')));
+		$data['title'] = "Keranjang Belanja | blonjosam.com";
+		$data['total'] = $this->toko_online_model->get_total('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('id_kpesan')), 'jumlah_produk', 'subtotal_belanja');
+		//print_r($this->db->last_query());
+		$data['jumlah'] = $this->toko_online_model->get_jumlah('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('id_kpesan')), 'jumlah_produk', 'berat_total');
+		$data['cart'] = $this->toko_online_model->get_keranjang_belanja(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('id_kpesan')));
 		$data['content'] = 'user/cart1';
 		$this->load->view('user/dashboard1', $data);
 	}
@@ -299,11 +322,12 @@ class Home extends CI_Controller
 
 	public function checkout()
 	{
+		$data['title'] = "Checkout | blonjosam.com";
 		$data['konten'] = $this->toko_online_model->get_table('konten');
-		$data['jumlah'] = $this->toko_online_model->get_jumlah('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('acak')), 'jumlah_produk', 'berat_total');
+		$data['jumlah'] = $this->toko_online_model->get_jumlah('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('id_kpesan')), 'jumlah_produk', 'berat_total');
 		$data['produk'] =
-			$data['total'] = $this->toko_online_model->get_total('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('acak')), 'jumlah_produk', 'subtotal_belanja');
-		$data['cart'] = $this->toko_online_model->get_keranjang_belanja(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('acak')));
+			$data['total'] = $this->toko_online_model->get_total('keranjang_belanja', array('id_keranjang_belanja' => $this->session->userdata('id_kpesan')), 'jumlah_produk', 'subtotal_belanja');
+		$data['cart'] = $this->toko_online_model->get_keranjang_belanja(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('id_kpesan')));
 		if ($data['cart'] == null) {
 			$this->session->set_flashdata(
 				'cart',
@@ -314,10 +338,10 @@ class Home extends CI_Controller
 			$data['content'] = 'user/cart1';
 			$this->load->view('user/dashboard1', $data);
 		} else {
-			$penjual = $this->toko_online_model->get_penjual_cart(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('acak')));
+			$penjual = $this->toko_online_model->get_penjual_cart(array('keranjang_belanja.id_keranjang_belanja' => $this->session->userdata('id_kpesan')));
 			$angka = 0;
 			foreach ($penjual as $p) {
-				$data_penjual[$angka] = $this->toko_online_model->get_table_where('user', array('id_user' => $p['id_user']));
+				$data_penjual[$angka] = $this->toko_online_model->get_table_where2('user', array('id_user' => $p['id_user']));
 				$angka++;
 			}
 
@@ -465,5 +489,15 @@ class Home extends CI_Controller
 		;
 
 		return $output;
+	}
+
+	function ajax_get_id($id_produk){
+		$data = $this->toko_online_model->ajax_get_id($id_produk);
+		echo json_encode($data);
+	}
+
+	function ajax_get_voucher($id_voucher){
+		$data = $this->toko_online_model->ajax_get_voucher($id_voucher);
+		echo json_encode($data);
 	}
 }

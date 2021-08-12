@@ -186,6 +186,18 @@ class Toko_online_model extends CI_Model
         return $query->result_array();
     }
 
+    function get_voucher($table, $where)
+    {
+        $date = date('Y-m-d');
+        $this->db->where($where);
+        $this->db->where('sts','Y');
+        $this->db->where('tgl_terbit_voucher >=', $date);
+        $this->db->where('tgl_exp_voucher !=', $date);
+        $query = $this->db->get($table);
+
+        return $query->result();
+    }
+
     function get_table_where_limit($table, $where, $limit)
     {
 
@@ -684,5 +696,59 @@ class Toko_online_model extends CI_Model
                  ->limit(1);
         return $this->db->get($tabel);
     }
+
+    public function ajax_get_id($id) {
+		$this->db->from('produk');
+		$this->db->where('id_produk',$id);
+		$query = $this->db->get();
+		return $query->row();
+	}
+
+    public function ajax_get_voucher($id){
+        $this->db->from('t_voucher');
+		$this->db->where('id',$id);
+		$query = $this->db->get();
+		return $query->row();
+    }
+
+    public function get_rating($table, $where){
+      //  $date = date('Y-m-d');
+        $this->db->where($where);
+        $this->db->select('count(id_produk) as jml_ulasan, sum(rate_star) as total_ulasan');
+        $query = $this->db->get($table);
+
+        return $query->row();
+    }
+
+    public function get_komentar($table, $where){
+        $this->db->where($where);
+        $query = $this->db->get($table);
+
+        return $query->result();
+    }
+
+    public function komentar($id=null, $status=null){
+		if($id==null){
+			$this->db->limit(10);
+		}else{
+			if($status==null){
+				$this->db->where('review_produk.id_review', $id);
+			}else{
+				$this->db->limit(10);
+			}	
+		}
+		$this->db->order_by("RAND()");
+		$this->db->from('review_produk');
+		return $this->db->get();
+	}
+
+    public function ambil_komentar($num, $offset)
+	{
+		$this->db->order_by('id_review', 'ASC');
+
+		$data = $this->db->get('review_produk', $num, $offset);
+
+		return $data->result();
+	}
 
 }

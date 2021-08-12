@@ -28,7 +28,7 @@ $sesi = $this->session->userdata('acak');
     <title><?php echo $title ?></title>
 
     <script type='text/javascript' src="<?php echo base_url() ?>assets/js/jquery-1.11.1.min.js"></script>
-    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="<?= base_url() ?>assets/css/font-awesome.min.css" />
     <link href='https://fonts.googleapis.com/css?family=Aladin' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Montserrat|Raleway:400,200,300,500,600,700,800,900,100' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Playfair+Display:400,700,900' rel='stylesheet' type='text/css'>
@@ -57,6 +57,7 @@ $sesi = $this->session->userdata('acak');
     <script src="<?= base_url() ?>assets/js/simpleCart.min.js"> </script>
     <script src="<?= base_url() ?>assets/js/responsiveslides.min.js"></script>
     <script src="<?= base_url() ?>assets/js/jquery.etalage.min.js"></script>
+    <script src="<?php  echo base_url() ?>assets/js/star.js"></script>
     <script>
         // You can also use "$(window).load(function() {"
         $(function() {
@@ -103,7 +104,7 @@ $sesi = $this->session->userdata('acak');
             <div class="header_right">
 
                 <div class="cart box_1">
-                    <a href="<?= base_url('user/home/cart') ?>">
+                    <a href="<?= base_url('cart') ?>">
                         <!-- <?php if ($cart != null) : ?>
                             <h3>Rp. <?= number_format($total[0]['total_harga'], 0, ',', '.'); ?> (<span id="simpleCart_quantity"><?= $total[0]['total_jumlah'] ?></span> items)<img src="<?= base_url() ?>assets/img/bag.png" alt=""></h3>
                         <?php else : ?>
@@ -216,7 +217,7 @@ $sesi = $this->session->userdata('acak');
               }
             }
             });
-            var waktu = setTimeout("cek()",4000);
+            //var waktu = setTimeout("cek()",4000);
        }
     </script>    
 </body>
